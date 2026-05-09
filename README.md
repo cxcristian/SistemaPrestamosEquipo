@@ -1,55 +1,69 @@
 # Sistema de Préstamos de Equipos (SPE)
 
-Sistema interactivo por terminal que permite gestionar préstamos de equipos. Desarrollado en Python con un menú de 6 opciones: ver inventario, prestar equipos, devolver equipos, ver historial de préstamos, agregar nuevos equipos y salir.
+Sistema interactivo por terminal que permite gestionar préstamos de equipos. Desarrollado en Python con programación orientada a objetos y un menú de 6 opciones: ver inventario, prestar equipos, devolver equipos, ver historial de préstamos, agregar nuevos equipos y salir.
 
 ## Estructura del código
 
-### Menú principal
+### Las clases
+
+![Clases del sistema](img/clases.png)
+
+El código se organiza en 3 clases que se componen entre sí:
+
+- **`Prestamo`** — Representa un préstamo individual. Tiene dos atributos: `usuario` (string) y `fecha` (date). Su método `__str__` permite mostrarlo fácilmente con `print()`.
+
+- **`Equipo`** — Representa un equipo del inventario. Tiene `nombre`, `disponible` (bool) y una lista `prestamos` que almacena objetos `Prestamo`. Sus métodos (`prestar()`, `devolver()`, `mostrar()`, `mostrar_historial()`) le permiten gestionar su propio estado sin necesidad de funciones externas.
+
+- **`Inventario`** — Administra la colección de equipos usando un diccionario donde la clave es el nombre del equipo y el valor es el objeto `Equipo`. Sus métodos (`agregar()`, `obtener()`, `mostrar_todos()`, `mostrar_historial()`) reemplazan las funciones sueltas del enfoque procedural.
+
+**Relación**: `Inventario` contiene muchos `Equipo`, y cada `Equipo` contiene muchos `Prestamo`.
+
+### El menú principal
 
 ![Menú principal](img/menu.png)
 
-En esta imagen se ve el bucle principal del programa. Un `while` que muestra las 6 opciones del menú, valida la entrada con `try`/`except` para evitar errores si se ingresa texto en lugar de un número, y usa `match`/`case` para ejecutar la función correspondiente según la opción seleccionada.
+El menú sigue siendo un bucle `while` con 6 opciones y validación `try`/`except`, pero ahora en vez de llamar funciones sueltas que modifican un diccionario global, usa los métodos de los objetos:
 
-### Funciones del sistema
+- `inventario.mostrar_todos()` en vez de `mostrar_equipos()`
+- `equipo.prestar(usuario)` en vez de `registrar_prestamo(nombre)`
+- `equipo.devolver()` en vez de `devolver_equipo(nombre)`
+- `inventario.mostrar_historial()` en vez de `ver_historial()`
+- `inventario.agregar(nombre)` en vez de `agregar_equipo(nombre)`
 
-![Funciones del sistema](img/funciones.png)
+## Creación de objetos inline
 
-Aquí están las funciones modulares que realizan cada operación:
+Una diferencia clave con la programación procedural es cómo se crean los objetos. En lugar de hacer:
 
-- **`mostrar_equipos()`** — Recorre el diccionario `inventario_equipos` y muestra cada equipo con su estado (Disponible / Prestado).
-- **`registrar_prestamo(nombre_equipo)`** — Verifica que el equipo exista y esté disponible, luego registra el préstamo con el nombre del usuario y la fecha actual.
-- **`devolver_equipo(nombre_equipo)`** — Verifica que el equipo exista y esté prestado, luego cambia su disponibilidad a `True`.
-- **`ver_historial()`** — Muestra todos los préstamos registrados para cada equipo.
-- **`agregar_equipo(nombre_equipo)`** — Agrega un nuevo equipo al inventario con disponibilidad `True` y una lista vacía de préstamos.
+```python
+nuevo_prestamo = Prestamo("Ana", fecha)
+self.prestamos.append(nuevo_prestamo)
+```
 
-Todas las funciones trabajan sobre un diccionario principal `inventario_equipos`, donde cada equipo tiene un diccionario con su disponibilidad y una lista de tuplas (usuario, fecha) como historial de préstamos.
+se hace directamente:
 
-## Ejemplos de ejecución
+```python
+self.prestamos.append(Prestamo("Ana", fecha))
+```
 
-### Test 1: Devolver y prestar un equipo
+El objeto `Prestamo` se crea y se pasa al método `.append()` sin guardarlo en una variable intermedia. Es azúcar sintáctica: funciona igual, pero ahorra una línea. Pasa lo mismo al crear `Equipo("Tesla")` dentro de `agregar()`.
 
-![Test 1](img/test1.png)
+## Ejemplo de ejecución
 
-Se inicia viendo el inventario — "PC gamer" aparece como **prestado**. Luego se devuelve: la disponibilidad cambia a `True`. Finalmente se presta a "cristianGiraldo": la disponibilidad vuelve a `False` y se agrega una nueva tupla `("cristianGiraldo", 2026-05-08)` al historial.
+![Consola de ejecución](img/consola.png)
 
-### Test 2: Historial y agregar equipo
+El flujo completo del sistema:
 
-![Test 2](img/test2.png)
-
-Se consulta el historial de "PC gamer" donde aparecen 3 préstamos registrados (Cristian Floo, Gato miau miau y cristianGiraldo). Luego se agrega "Laptop-51" al inventario con disponibilidad `True` y lista de préstamos vacía.
-
-### Test 3: Historial actualizado
-
-![Test 3](img/test3.png)
-
-Se vuelve a consultar el historial y ahora aparecen ambos equipos: "PC gamer" con sus 3 préstamos y "Laptop-51" con **Sin préstamos aún**. Finalmente se selecciona la opción 6 y se sale del sistema.
+1. Se agrega "Tesla" al inventario
+2. Se presta "Tesla" a "Cristian"
+3. Se devuelve "Tesla"
+4. Se consulta el historial: aparecen "PC gamer" con 2 préstamos y "Tesla" con 1
+5. Se vuelve a consultar el historial (confirmación)
+6. Se listan los equipos: "PC gamer" aparece como **Prestado** y "Tesla" como **Disponible**
 
 ## Reflexión personal
 
-Cuando estaba mirando los requisitos y sobre todo cómo guardar la estructura de datos, había hecho la estructura en 3 partes: diccionario, lista y tupla. Leyendo y enfrentándome a problemas de diseño, volví a leer el documento y al comprender que el diccionario es la columna vertebral de toda la estructura de datos, todo fue más fácil.
-
-Leer, analizar y comprender los requisitos y ayudas es muy importante para tener un desarrollo ágil y tranquilo.
+Al principio pensaba POO como algo más complicado de lo que realmente es. Entender que una clase es simplemente una plantilla que define atributos (datos) y métodos (comportamiento), y que los objetos son instancias con vida propia, fue clave. La parte más tricky fue la creación inline de objetos sin asignarlos a una variable, pero una vez que entendés que `Prestamo("Ana", fecha)` devuelve el objeto listo para usar, todo fluye.
 
 ## Conclusiones
 
-El proyecto permitió aplicar conceptos fundamentales de Python como diccionarios anidados, listas, tuplas, funciones modulares, manejo de excepciones y estructuras de control. La clave del desarrollo fue entender bien la estructura de datos antes de escribir el código, lo que evitó retrabajo y facilitó la implementación de cada funcionalidad.
+El proyecto permitió aplicar conceptos fundamentales de Python como clases, objetos, encapsulamiento, composición y métodos. La refactorización de procedural a POO hizo el código más organizado: cada clase tiene una responsabilidad clara y los datos no están expuestos en un diccionario global. La clave del desarrollo fue entender la relación entre las clases (Inventario → Equipo → Préstamo) antes de escribir el código.
